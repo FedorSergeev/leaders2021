@@ -1,0 +1,5 @@
+Conda 3.8
+Libs:
+pip install folium
+pip install flask
+conda install geopandas
