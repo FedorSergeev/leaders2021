@@ -4,7 +4,7 @@ RUN conda update conda
 RUN conda install python=3.8 geopandas
 RUN pip install folium flask
 RUN mkdir /src
-RUN mkdir /logs && touch /logs/logs.log
+RUN mkdir /src/logs && touch /src/logs/logs.log
 COPY . /src/
 RUN rm /src/Dockerfile
 RUN chmod +x  /src/server.py
