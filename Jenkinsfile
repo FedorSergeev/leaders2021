@@ -10,7 +10,7 @@ pipeline {
                                                                 extensions       : scm.extensions,
                                                                 userRemoteConfigs: [[
                                                                                             url          : 'https://github.com/FedorSergeev/leaders2021.git',
-                                                                                            credentialsId: 'githubd'
+                                                                                            credentialsId: 'usergh'
                                                                                     ]]
                     ]
                 }
