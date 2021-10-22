@@ -1,14 +1,10 @@
-import os
-
-from flask import Flask, jsonify, abort, make_response, request, render_template
-import requests
-import json
-import time
-import sys
-import pandas as pd
-from prediction import SocialRecommend
 import logging
-logging.basicConfig(filename='logs/logs.log',level=logging.DEBUG)
+
+from flask import Flask, jsonify, make_response, request, render_template
+
+from prediction import SocialRecommend
+
+logging.basicConfig(filename='logs/logs.log', level=logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -35,19 +31,23 @@ def get_task():
     except:
         logging.debug('Ошибка')
 
+
 @app.route('/render_map')
 def render_the_map():
     return render_template(r'map.html')
+
 
 @app.errorhandler(404)
 def not_found(error):
     logging.warning('Предупреждение')
     return make_response(jsonify({'code': 'PAGE_NOT_FOUND'}), 404)
 
+
 @app.errorhandler(500)
 def server_error(error):
     logging.warning('Предупреждение')
     return make_response(jsonify({'code': 'INTERNAL_SERVER_ERROR'}), 500)
 
+
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
