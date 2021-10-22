@@ -31,9 +31,9 @@ def get_task():
     try:
         result = launch_task(request.args.get('take_into_migration'), 'v1.0')
         logging.info('Информационное сообщение')
+        return make_response(jsonify(result), 200)
     except:
         logging.debug('Ошибка')
-    return make_response(jsonify(result), 200)
 
 @app.route('/render_map')
 def render_the_map():
