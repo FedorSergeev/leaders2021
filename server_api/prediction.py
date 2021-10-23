@@ -118,10 +118,10 @@ class SocialRecommend:
                 sim_geo = gpd.GeoSeries(data_geo).simplify(tolerance=0.001)
                 geo_j = sim_geo.to_json()
                 geo_j = folium.GeoJson(data=geo_j,
-                                       style_function=lambda x: {'fillColor': 'green', 'weight': 0.05,
+                                       style_function=lambda x: {'fillColor': 'red', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Рекомендуем данную область для постройки<br>Номер области {}'.format(item[1])
-                geo_data += 'Коэффициент миграционного прироста <input name="cell_param" type="number" value="1"' \
+                geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
                             'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=280).add_to(geo_j)
                 geo_j.add_to(m_f)
@@ -129,10 +129,10 @@ class SocialRecommend:
                 sim_geo = gpd.GeoSeries(data_geo).simplify(tolerance=0.001)
                 geo_j = sim_geo.to_json()
                 geo_j = folium.GeoJson(data=geo_j,
-                                       style_function=lambda x: {'fillColor': '#C8FE2E', 'weight': 0.05,
+                                       style_function=lambda x: {'fillColor': '#FF5500', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Данную область можно считать неплохой для постройки<br>Номер области: {}'.format(item[1])
-                geo_data += 'Коэффициент миграционного прироста <input name="cell_param" type="number" value="1"' \
+                geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
                             'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
@@ -143,7 +143,7 @@ class SocialRecommend:
                                        style_function=lambda x: {'fillColor': 'orange', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Слабо рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
-                geo_data += 'Коэффициент миграционного прироста <input name="cell_param" type="number" value="1"' \
+                geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
                             'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=300).add_to(geo_j)
                 geo_j.add_to(m_f)
@@ -151,10 +151,10 @@ class SocialRecommend:
                 sim_geo = gpd.GeoSeries(data_geo).simplify(tolerance=0.001)
                 geo_j = sim_geo.to_json()
                 geo_j = folium.GeoJson(data=geo_j,
-                                       style_function=lambda x: {'fillColor': '#FF4000', 'weight': 0.05,
+                                       style_function=lambda x: {'fillColor': '#C8FE2E', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
-                geo_data += 'Коэффициент миграционного прироста <input name="cell_param" type="number" value="1"' \
+                geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
                             'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=280).add_to(geo_j)
                 geo_j.add_to(m_f)
@@ -162,14 +162,14 @@ class SocialRecommend:
                 sim_geo = gpd.GeoSeries(data_geo).simplify(tolerance=0.001)
                 geo_j = sim_geo.to_json()
                 geo_j = folium.GeoJson(data=geo_j,
-                                       style_function=lambda x: {'fillColor': 'red', 'weight': 0.05,
+                                       style_function=lambda x: {'fillColor': 'green', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Крайне не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
-                geo_data += 'Коэффициент миграционного прироста <input name="cell_param" type="number" value="1"' \
+                geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
                             'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
-        colormap = cm.LinearColormap(colors=['red', '#FF4000', 'orange', '#C8FE2E', 'green', 'blue'],
+        colormap = cm.LinearColormap(colors=['green','#C8FE2E','orange','red', '#FF5500'],
                                      index=[0, 0.25, 0.5, 0.75, 1], vmin=0, vmax=1)
         colormap.caption = 'Целесообразность постройки объекта'
         colormap.add_to(m_f)
