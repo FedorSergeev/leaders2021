@@ -1,21 +1,23 @@
 import logging
+import sys
 
 from flask import Flask, jsonify, make_response, request, render_template
 
 from prediction import SocialRecommend
 
 logging.basicConfig(filename='logs/logs.log', level=logging.DEBUG)
+logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 app = Flask(__name__)
 
-recommender = SocialRecommend()
+social_recommend = SocialRecommend()
 
 
 def launch_task(take_info_migration, api):
-    print(take_info_migration, api)
-    pred_recomend = recommender.predict(take_info_migration)
+    logging.info(f"Launch task with params: take_info_migration='{take_info_migration}' and api='{api}'")
+    pred_recommend = social_recommend.predict(take_info_migration)
     if api == 'v1.0':
-        res_dict = pred_recomend
+        res_dict = pred_recommend
         return res_dict
     else:
         res_dict = {'error': 'API doesnt exist'}
@@ -24,12 +26,11 @@ def launch_task(take_info_migration, api):
 
 @app.route('/social/api/v1.0/getpred', methods=['GET'])
 def get_task():
-    try:
-        result = launch_task(request.args.get('take_into_migration'), 'v1.0')
-        logging.info('Информационное сообщение')
-        return make_response(jsonify(result), 200)
-    except:
-        logging.debug('Ошибка')
+    args = request.args
+    logging.info(f'Prediction requested with params: {args.to_dict()}')
+    take_info_migration = args.get('take_into_migration', '0')
+    result = launch_task(take_info_migration, 'v1.0')
+    return make_response(jsonify(result), 200)
 
 
 @app.route('/render_map')
