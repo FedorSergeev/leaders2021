@@ -1,7 +1,9 @@
 import { HttpHeaders } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
+import { Component, SecurityContext } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import * as DOMPurify from 'dompurify';
+
 
 
 @Component({
@@ -9,7 +11,9 @@ import { DomSanitizer } from '@angular/platform-browser';
   templateUrl: './rendered-map.component.html',
 })
 export class RenderedMapComponent {
-  renderedMapEndpoint: string = "http://localhost:5000/render_map"
+  url: any = '';
+  renderedMapEndpoint: string = "http://localhost:5000/social/api/v1.0/getpred"
+  // renderedMapEndpoint: string = "http://localhost:5000/render_map"
   htmlData: any = '';
   htmlString: any = '';
   constructor(
@@ -17,31 +21,54 @@ export class RenderedMapComponent {
     private http: HttpClient
   ) { }
 
+  ngOnInit() {
+    this.url = this.sanitizer.bypassSecurityTrustResourceUrl("http://localhost:5000/render_map")
+    this.getRenderedMap()
+  }
+
+  get processedDocument(): SafeHtml {
+    if (this.htmlString) {
+      const template = document.createElement('template');
+      template.innerHTML = this.htmlString.trim()
+      // const sanitized = DOMPurify.sanitize(this.htmlString, { ALLOWED_TAGS: ['meta', 'style', 'link', 'script'], RETURN_DOM: true });
+
+      /* Add script tag */
+      const script = document.createElement('script');
+      script.src = 'assets/js/iframeResizer.contentWindow.js';
+      template.content.appendChild(script)
+      // sanitized.appendChild(script);
+
+      /* Return result */
+      // console.log("hey")
+      // console.log(this.htmlString)
+      // console.log(sanitized.outerHTML)
+      return template.content.firstChild
+    }
+    return null;
+  }
+
   public getRenderedMap() {
     const headers = new HttpHeaders({
-      'Content-Type': 'text/plain',
-      responseType: 'text'
+      responseType: 'text/html',
+      'Access-Control-Allow-Origin': '*'
     });
-    headers: new HttpHeaders({
-      'Content-Type': 'text/plain',
-      'Accept': 'text/plain'
-    }),
-      // this.http.get(this.myHtmlTemplate,{headers} ).subscribe((result)=>{
-      //     console.log('got result',result);
-      //       this.htmlData= result;
-      //        this.htmlData = this.sanitizer.bypassSecurityTrustHtml(this.htmlString); // this line bypasses angular security
-      // })
 
-      this.http.get(this.renderedMapEndpoint, { responseType: 'text' }).subscribe(res => {
+    // this.http.get<string>(this.renderedMapEndpoint, { headers })
+    //   .subscribe(res => {
+    //     // console.log(res)
+    //     this.htmlString = res;
+    //     // this.sanitizer.sanitize(SecurityContext.URL, url)
+    //     this.htmlData = this.sanitizer.bypassSecurityTrustHtml(this.htmlString); // this line bypasses angular security
+    //     console.log(this.htmlData)
+    //   })
+
+    this.http.get<SafeHtml>(this.renderedMapEndpoint, { headers })
+      .subscribe(res => {
+        console.log(res)
         this.htmlString = res;
-        this.htmlData = this.sanitizer.bypassSecurityTrustHtml(this.htmlString); // this line bypasses angular security
+        // this.htmlData = res
+        // console.log(this.htmlData)
       })
-    // const request = this.http.get<string>('https://developer.mozilla.org/en-US/docs/Learn/HTML/Forms/Your_first_HTML_form', {
-    //   headers: headers,
-    //   responseType: 'text'
-    // }).subscribe(res => this.htmlString = res);
-    // }
-
 
   }
 }

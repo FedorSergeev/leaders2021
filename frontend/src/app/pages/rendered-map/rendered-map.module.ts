@@ -16,6 +16,7 @@ import { ThemeModule } from '../../@theme/theme.module';
 import { RenderedMapComponent } from './rendered-map.component';
 import { ChartModule } from 'angular2-chartjs';
 import { LeafletModule } from '@asymmetrik/ngx-leaflet';
+import { IFrameResizerDirective } from './rendered-map.directive';
 
 @NgModule({
   imports: [
@@ -34,7 +35,7 @@ import { LeafletModule } from '@asymmetrik/ngx-leaflet';
     LeafletModule,
   ],
   declarations: [
-    RenderedMapComponent,
+    RenderedMapComponent, IFrameResizerDirective
   ],
   providers: [
   ],
