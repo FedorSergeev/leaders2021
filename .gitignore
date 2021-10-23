@@ -172,3 +172,6 @@ testem.log
 .DS_Store
 Thumbs.db
 .github/*
+
+tslint.json
+tsconfig.json
