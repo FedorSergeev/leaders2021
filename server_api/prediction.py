@@ -33,11 +33,19 @@ class SocialRecommend:
             cell = self.fishnet_base_geo[self.fishnet_base_geo['cell_zid'] == r.nearest_cell_zid].index[0]
             self.maters_cells.append(cell)
 
-    def get_normalization_data(self) -> Tuple[Any, Any]:
+    def recount_data(self,new_cell_value) -> Tuple[Any, Any]:
+        fishnet = self.fishnet_base.copy().drop(['nearest_mater', 'nearest_hosp'], axis=1)
+        for cell_id in new_cell_value:
+            fishnet = fishnet.iloc[int(cell_id)].apply(lambda x: x * int(new_cell_value[cell_id]))
+        fishnet['nearest_mater'] = self.fishnet_base['nearest_mater']
+        fishnet['nearest_hosp'] = self.fishnet_base['nearest_hosp']
+        return fishnet
+
+    def get_normalization_data(self, fishnet) -> Tuple[Any, Any]:
         # Нормализует данные, кроме категориальных.
         # Возвращает 2 нормализованных DataFrame объекта. Информация по всем зонам и по роддомам
         # Нормализация происходит объектом StandartScaler из пакета sklearn, модуля preprocessing
-        fishnet = self.fishnet_base.drop(['nearest_mater', 'nearest_hosp'], axis=1)
+        fishnet = fishnet.drop(['nearest_mater', 'nearest_hosp'], axis=1)
         maters = self.maters_base.drop(['nearest_mater', 'nearest_hosp'], axis=1)
         # create a scaler object
         std_scaler = StandardScaler()
@@ -50,11 +58,6 @@ class SocialRecommend:
         fishnet_std['nearest_hosp'] = self.fishnet_base.nearest_mater.apply(lambda x: self.nearest_hosp(x))
         return fishnet_std, maters_std
 
-    def migration_calc(self):
-        # Перерасчитывает данные self.maters_base и self.fishnet_base с учётом миграции.
-        # Нормализовать только после пересчёта миграции.
-        raise NotImplementedError
-
     def calculate_dist(self, cell_data, maters) -> Optional[int]:
         min_dist = None
         for _, row in maters.iterrows():
@@ -65,13 +68,15 @@ class SocialRecommend:
                 min_dist = dist
         return min_dist
 
-    def predict(self, migration) -> int:
+    def predict(self, migration, new_cell_data = {}) -> int:
         # Просчитывает метрику по всем ячейкам из fishnet по maters (родильные дома)
         # Возвращаем файл html с построенной картой
         if migration != '0':
-            raise NotImplementedError
+            fishnet = self.recount_data(new_cell_data)
+            fishnet, maters = self.get_normalization_data(fishnet)
+        else:
+            fishnet, maters = self.get_normalization_data(self.fishnet_base)
         predictions = []
-        fishnet, maters = self.get_normalization_data()
         for index, row in fishnet.iterrows():
             row_data = np.array(row.values)
             pred = self.calculate_dist(row_data, maters)

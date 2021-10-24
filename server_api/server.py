@@ -27,14 +27,21 @@ def launch_task(take_info_migration, api):
 
 
 @cross_origin()
-@app.route('/social/api/v1.0/getpred', methods=['GET'])
+@app.route('/social/api/v1.0/getpred', methods=['GET', 'POST'])
 def get_task():
-    args = request.args
-    logging.info(f'Prediction requested with params: {args.to_dict()}')
-    take_info_migration = args.get('take_into_migration', '0')
-    result = launch_task(take_info_migration, 'v1.0')
-    return make_response(jsonify(result), 200)
-
+    if request.method == 'GET':
+        args = request.args
+        logging.info(f'Prediction requested with params: {args.to_dict()}')
+        take_info_migration = args.get('take_into_migration', '0')
+        result = launch_task(take_info_migration, 'v1.0')
+        return make_response(jsonify(result), 200)
+    else:
+        new_data_cell = request.json
+        args = request.args
+        logging.info(f'Prediction requested with params: {args.to_dict()}')
+        take_info_migration = args.get('take_into_migration', '0')
+        result = launch_task(take_info_migration, new_data_cell)
+        return make_response(jsonify(result), 200)
 
 @cross_origin()
 @app.route('/render_map')
