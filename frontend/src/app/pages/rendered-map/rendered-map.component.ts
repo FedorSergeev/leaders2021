@@ -24,6 +24,7 @@ export class RenderedMapComponent {
   ) { }
 
   ngOnInit() {
+    this.url = this.sanitizer.bypassSecurityTrustResourceUrl(this.url)
     this.getRenderedMap()
   }
 
@@ -63,13 +64,6 @@ export class RenderedMapComponent {
         cookie_object = JSON.parse(js_raw)
     }
 
-    for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i];
-        var eqPos = cookie.indexOf("=");
-        var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    }
-
     const headers = new HttpHeaders({
       responseType: 'text/html',
       'Access-Control-Allow-Origin': '*'
@@ -99,8 +93,12 @@ export class RenderedMapComponent {
   public updateMap() {
     if (!this.isGettingMap) {
       console.log("asdf")
-      this.url = '';
+      this.url = this.sanitizer.bypassSecurityTrustResourceUrl('');
       this.getRenderedMap();
     }
+  }
+
+  public clearData() {
+    document.cookie = "app_cookies={}; path=/"
   }
 }
