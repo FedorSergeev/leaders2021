@@ -78,8 +78,13 @@ class SocialRecommend:
             predictions.append([pred, index])
         built_map = self.build_map(predictions)
         built_map.save(outfile=self.MAP_HTML)
-        string_map = open(self.MAP_HTML, 'r').read()
-        return string_map
+        return open(self.MAP_HTML, 'a').write("""
+        <script>
+            function saveCellData(id, value) {
+                console.log("save cell data");
+            }
+        </script>
+        """)
 
     @staticmethod
     def nearest_hosp(x) -> int:
@@ -133,7 +138,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Данную область можно считать неплохой для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/>'
+                            'min="0" max="100" style="width: 5em"/><button onclick="saveCellData();">Сохранить</button>'
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 3 * avg_mater_dist:
@@ -144,7 +149,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Слабо рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/>'
+                            'min="0" max="100" style="width: 5em"/><button class="" type="button" onclick="saveCellData()">Сохранить!</button>'
                 folium.Popup(geo_data, min_width=250, max_width=300).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 4.5 * avg_mater_dist:
@@ -155,7 +160,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/>'
+                            'min="0" max="100" style="width: 5em"/><button type="button" onclick="saveCellData()">Сохранить!</button>'
                 folium.Popup(geo_data, min_width=250, max_width=280).add_to(geo_j)
                 geo_j.add_to(m_f)
             else:
@@ -166,7 +171,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Крайне не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/>'
+                            'min="0" max="100" style="width: 5em"/><button type="button" onclick="saveCellData()">Сохранить!</button>'
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
         colormap = cm.LinearColormap(colors=['green','#C8FE2E','orange','red', '#FF5500'],
