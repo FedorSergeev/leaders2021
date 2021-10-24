@@ -10,5 +10,5 @@
 
 export const environment = {
   production: false,
-  backend_host: 'google.com'
+  backend_host: 'zusemima-server'
 };
