@@ -33,10 +33,11 @@ class SocialRecommend:
             cell = self.fishnet_base_geo[self.fishnet_base_geo['cell_zid'] == r.nearest_cell_zid].index[0]
             self.maters_cells.append(cell)
 
-    def recount_data(self,new_cell_value) -> Tuple[Any, Any]:
+    def recount_data(self, new_cell_value) -> Tuple[Any, Any]:
         fishnet = self.fishnet_base.copy().drop(['nearest_mater', 'nearest_hosp'], axis=1)
         for cell_id in new_cell_value:
-            fishnet = fishnet.iloc[int(cell_id)].apply(lambda x: x * int(new_cell_value[cell_id]))
+            fishnet.iloc[int(cell_id)] = fishnet.iloc[int(cell_id)].apply(
+                lambda x: x * int(new_cell_value[cell_id]["value"]))
         fishnet['nearest_mater'] = self.fishnet_base['nearest_mater']
         fishnet['nearest_hosp'] = self.fishnet_base['nearest_hosp']
         return fishnet
@@ -68,10 +69,10 @@ class SocialRecommend:
                 min_dist = dist
         return min_dist
 
-    def predict(self, migration, new_cell_data = {}) -> int:
+    def predict(self, new_cell_data: dict = {}) -> int:
         # Просчитывает метрику по всем ячейкам из fishnet по maters (родильные дома)
         # Возвращаем файл html с построенной картой
-        if migration != '0':
+        if len(new_cell_data) > 0:
             fishnet = self.recount_data(new_cell_data)
             fishnet, maters = self.get_normalization_data(fishnet)
         else:

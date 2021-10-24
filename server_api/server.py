@@ -16,32 +16,20 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 social_recommend = SocialRecommend()
 
 
-def launch_task(take_info_migration, api):
-    logging.info(f"Launch task with params: take_info_migration='{take_info_migration}' and api='{api}'")
-    if api == 'v1.0':
-        res_dict = social_recommend.predict(take_info_migration)
-        return res_dict
-    else:
-        res_dict = {'error': 'API doesnt exist'}
-        return res_dict
+def launch_task(new_data_cell: dict):
+    logging.info(f"Launch task with params: data='{new_data_cell}'")
+    res_dict = social_recommend.predict(new_data_cell)
+    return res_dict
 
 
 @cross_origin()
 @app.route('/social/api/v1.0/getpred', methods=['GET', 'POST'])
 def get_task():
-    if request.method == 'GET':
-        args = request.args
-        logging.info(f'Prediction requested with params: {args.to_dict()}')
-        take_info_migration = args.get('take_into_migration', '0')
-        result = launch_task(take_info_migration, 'v1.0')
-        return make_response(jsonify(result), 200)
-    else:
-        new_data_cell = request.json
-        args = request.args
-        logging.info(f'Prediction requested with params: {args.to_dict()}')
-        take_info_migration = args.get('take_into_migration', '0')
-        result = launch_task(take_info_migration, new_data_cell)
-        return make_response(jsonify(result), 200)
+    new_data_cell = request.json or {}
+    logging.info(f'Prediction requested with params: {new_data_cell}')
+    result = launch_task(new_data_cell)
+    return make_response(jsonify(result), 200)
+
 
 @cross_origin()
 @app.route('/render_map')
