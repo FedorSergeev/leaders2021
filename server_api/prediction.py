@@ -65,7 +65,7 @@ class SocialRecommend:
                 min_dist = dist
         return min_dist
 
-    def predict(self, migration) -> str:
+    def predict(self, migration) -> int:
         # Просчитывает метрику по всем ячейкам из fishnet по maters (родильные дома)
         # Возвращаем файл html с построенной картой
         if migration != '0':
@@ -80,8 +80,25 @@ class SocialRecommend:
         built_map.save(outfile=self.MAP_HTML)
         return open(self.MAP_HTML, 'a').write("""
         <script>
-            function saveCellData(id, value) {
-                console.log("save cell data");
+            function saveCellData(element) {
+                console.log(312)
+                let id = element.className
+                let value = element.parentNode.children[3].value
+                let cookies = document.cookie.split(";")
+                let js_raw = null  
+                for (index in cookies) {
+                    if (cookies[index].indexOf("app_cookies=") >= 0){
+                        let cookie = cookies[index]
+                        js_raw = cookie.slice(cookie.indexOf("app_cookies=") + "app_cookies=".length)
+                        break
+                    }
+                }
+                let cookie_object = {}
+                if (js_raw) {
+                    cookie_object = JSON.parse(js_raw)
+                }
+                cookie_object[id] = {"value": value}
+                document.cookie = "app_cookies=" + JSON.stringify(cookie_object) + ";"
             }
         </script>
         """)
@@ -105,18 +122,20 @@ class SocialRecommend:
         m_f = folium.Map(location=[55.7252, 37.6290], zoom_start=10, tiles='CartoDB positron')
         avg_mater_dist = 0.9079748864515159
         for item in preds:
-            data = self.fishnet_base_geo.loc[item[1]]
+            square_id = item[1]
+            js_button_code = f'<button class="{square_id}" type="button" onclick="saveCellData(this);">Сохранить</button>'
+            data = self.fishnet_base_geo.loc[square_id]
             data_geo = data.geometry
-            if item[1] in self.maters_cells:
+            if square_id in self.maters_cells:
                 html = """
                     В данной области уже построен роддом Номер ячейки: {}
-                    """.format(item[1])
+                    """.format(square_id)
                 sim_geo = gpd.GeoSeries(data_geo).simplify(tolerance=0.001)
                 geo_j = sim_geo.to_json()
                 geo_j = folium.GeoJson(data=geo_j,
                                        style_function=lambda x: {'fillColor': 'blue', 'weight': 0.05,
                                                                  'fillOpacity': 0.2})
-                geo_data = 'В данной области уже построен роддом<br>Номер области: {}<br>'.format(item[1])
+                geo_data = 'В данной области уже построен роддом<br>Номер области: {}<br>'.format(square_id)
                 folium.Popup(geo_data, min_width=250, max_width=250).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 1.5 * avg_mater_dist:
@@ -125,9 +144,9 @@ class SocialRecommend:
                 geo_j = folium.GeoJson(data=geo_j,
                                        style_function=lambda x: {'fillColor': 'red', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
-                geo_data = 'Рекомендуем данную область для постройки<br>Номер области {}'.format(item[1])
+                geo_data = 'Рекомендуем данную область для постройки<br>Номер области {}'.format(square_id)
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/>'
+                            'min="0" max="100" style="width: 5em"/>' + js_button_code
                 folium.Popup(geo_data, min_width=250, max_width=280).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 2.5 * avg_mater_dist:
@@ -136,9 +155,9 @@ class SocialRecommend:
                 geo_j = folium.GeoJson(data=geo_j,
                                        style_function=lambda x: {'fillColor': '#FF5500', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
-                geo_data = 'Данную область можно считать неплохой для постройки<br>Номер области: {}'.format(item[1])
+                geo_data = 'Данную область можно считать неплохой для постройки<br>Номер области: {}'.format(square_id)
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button onclick="saveCellData();">Сохранить</button>'
+                            'min="0" max="100" style="width: 5em"/>' + js_button_code
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 3 * avg_mater_dist:
@@ -147,9 +166,9 @@ class SocialRecommend:
                 geo_j = folium.GeoJson(data=geo_j,
                                        style_function=lambda x: {'fillColor': 'orange', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
-                geo_data = 'Слабо рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
+                geo_data = 'Слабо рекомендуем данную область для постройки<br>Номер области: {}'.format(square_id)
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button class="" type="button" onclick="saveCellData()">Сохранить!</button>'
+                            'min="0" max="100" style="width: 5em"/>' + js_button_code
                 folium.Popup(geo_data, min_width=250, max_width=300).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 4.5 * avg_mater_dist:
@@ -158,9 +177,9 @@ class SocialRecommend:
                 geo_j = folium.GeoJson(data=geo_j,
                                        style_function=lambda x: {'fillColor': '#C8FE2E', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
-                geo_data = 'Не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
+                geo_data = 'Не рекомендуем данную область для постройки<br>Номер области: {}'.format(square_id)
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button type="button" onclick="saveCellData()">Сохранить!</button>'
+                            'min="0" max="100" style="width: 5em"/>' + js_button_code
                 folium.Popup(geo_data, min_width=250, max_width=280).add_to(geo_j)
                 geo_j.add_to(m_f)
             else:
@@ -169,12 +188,12 @@ class SocialRecommend:
                 geo_j = folium.GeoJson(data=geo_j,
                                        style_function=lambda x: {'fillColor': 'green', 'weight': 0.05,
                                                                  'fillOpacity': 0.3})
-                geo_data = 'Крайне не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
+                geo_data = 'Крайне не рекомендуем данную область для постройки<br>Номер области: {}'.format(square_id)
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button type="button" onclick="saveCellData()">Сохранить!</button>'
+                            'min="0" max="100" style="width: 5em"/>' + js_button_code
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
-        colormap = cm.LinearColormap(colors=['green','#C8FE2E','orange','red', '#FF5500'],
+        colormap = cm.LinearColormap(colors=['green', '#C8FE2E', 'orange', 'red', '#FF5500'],
                                      index=[0, 0.25, 0.5, 0.75, 1], vmin=0, vmax=1)
         colormap.caption = 'Целесообразность постройки объекта'
         colormap.add_to(m_f)

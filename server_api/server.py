@@ -41,15 +41,6 @@ def get_task():
 def render_the_map():
     return render_template(r'map.html')
 
-@cross_origin()
-@app.route('/saveCellValue.js')
-def save_cell_value():
-    return """
-    function saveCellData() {
-  console.log("hi");
-}
-    """
-
 
 @app.errorhandler(404)
 def not_found(error):

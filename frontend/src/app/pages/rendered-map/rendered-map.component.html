@@ -1,7 +1,12 @@
 <div class="row">
   <div class="col-xxl-12">
     <nb-card [size]="'giant'">
-      <nb-card-header>Country Orders Statistics</nb-card-header>
+      <nb-card-header>
+        Country Orders Statistics
+        <button class="control-button" nbButton ghost size="medium" (click)="updateMap()">
+          Update map
+        </button>
+      </nb-card-header>
       <nb-card-body>
         <iframe appIframeResizer [src]="url" width="1300" height="610" type='text/html' frameborder="0"></iframe>
       </nb-card-body>

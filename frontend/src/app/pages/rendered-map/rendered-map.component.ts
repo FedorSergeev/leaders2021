@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, SecurityContext } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import * as DOMPurify from 'dompurify';
+import { catchError } from 'rxjs/operators';
 
 
 
@@ -12,17 +13,17 @@ import * as DOMPurify from 'dompurify';
 })
 export class RenderedMapComponent {
   url: any = '';
-  renderedMapEndpoint: string = "http://localhost:5000/social/api/v1.0/getpred"
-  // renderedMapEndpoint: string = "http://localhost:5000/render_map"
+  getPredictionUrl: string = "http://localhost:5000/social/api/v1.0/getpred"
+  renderedMapEndpoint: string = "http://localhost:5000/render_map"
   htmlData: any = '';
   htmlString: any = '';
+  isGettingMap = false
   constructor(
     private sanitizer: DomSanitizer,
     private http: HttpClient
   ) { }
 
   ngOnInit() {
-    this.url = this.sanitizer.bypassSecurityTrustResourceUrl("http://localhost:5000/render_map")
     this.getRenderedMap()
   }
 
@@ -61,14 +62,24 @@ export class RenderedMapComponent {
     //     this.htmlData = this.sanitizer.bypassSecurityTrustHtml(this.htmlString); // this line bypasses angular security
     //     console.log(this.htmlData)
     //   })
-
-    this.http.get<SafeHtml>(this.renderedMapEndpoint, { headers })
+    this.isGettingMap = true
+    this.http.get<SafeHtml>(this.getPredictionUrl, { headers })
+      // .pipe(catchError(err=> {err}))
       .subscribe(res => {
-        console.log(res)
+        this.isGettingMap = false
         this.htmlString = res;
+        this.url = this.sanitizer.bypassSecurityTrustResourceUrl(this.renderedMapEndpoint)
         // this.htmlData = res
         // console.log(this.htmlData)
       })
 
+  }
+
+  public updateMap() {
+    if (!this.isGettingMap) {
+      console.log("asdf")
+      this.url = '';
+      this.getRenderedMap();
+    }
   }
 }
