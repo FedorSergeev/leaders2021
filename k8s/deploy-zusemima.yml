@@ -1,0 +1,168 @@
+---
+- become: false
+  collections:
+    - kubernetes.core
+  hosts: localhost
+  tasks:
+    - name: Create Namespace
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "zusemima"
+            labels:
+              name: zusemima
+    - name: Create secret
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          data:
+            .dockerconfigjson: ewoiYXV0aHMiOnsiZG9ja2VyOjUwMDAiOnsidXNlcm5hbWUiOiJqZW5raW5zIiwicGFzc3dvcmQiOiJlb242bGVsODQiLCJlbWFpbCI6ImluZm9AdHJhbnMtaXQucHJvIiwiYXV0aCI6ImFtVnVhMmx1Y3pwbGIyNDJiR1ZzT0RRPSJ9fSwKImluc2VjdXJlLXJlZ2lzdHJpZXMiIDogWyJkb2NrZXI6NTAwMCJdCn0K
+          kind: Secret
+          metadata:
+            name: regcred
+            namespace: zusemima
+          type: kubernetes.io/dockerconfigjson
+    - name: Create Zusemima deployment
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "zusemima"
+            namespace: zusemima
+            labels:
+              app: zusemima
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: zusemima
+            template:
+              metadata:
+                labels:
+                  app: zusemima
+              spec:
+                containers:
+                - name: zusemima
+                  image: fsergeev/zusemima-server:1.0
+                  imagePullPolicy: Always
+                imagePullSecrets:
+                - name: regcred
+    - name: Create service
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: zusemima-server
+            namespace: zusemima
+          spec:
+            type: NodePort
+            selector:
+              app: zusemima
+            ports:
+              - port: 5000
+                targetPort: 5000
+                nodePort: 30084
+    - name: Create ingress
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: zusemima-ingress
+            namespace: zusemima
+            annotations:
+              kubernetes.io/ingress.class: public
+          spec:
+            rules:
+            - host: "zusemima-docker.trans-it.pro"
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: zusemima-service
+                      port:
+                        number: 5000
+    - name: Create Zusemima Web deployment
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "zusemima"
+            namespace: zusemima
+            labels:
+              app: zusemima-web
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: zusemima-web
+            template:
+              metadata:
+                labels:
+                  app: zusemima-web
+              spec:
+                containers:
+                - name: zusemima-web
+                  image: fsergeev/zusemima-web:1.0
+                  imagePullPolicy: Always
+    - name: Create service
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: zusemima-web
+            namespace: zusemima
+          spec:
+            type: NodePort
+            selector:
+              app: zusemima-web
+            ports:
+              - port: 4200
+                targetPort: 4200
+                nodePort: 30086
+    - name: Create ingress
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: zusemima-web-ingress
+            namespace: zusemima
+            annotations:
+              kubernetes.io/ingress.class: public
+          spec:
+            rules:
+            - host: "zusemima-web.trans-it.pro"
+              http:
+                paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: zusemima-web
+                      port:
+                        number: 4200

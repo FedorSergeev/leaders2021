@@ -1,0 +1,176 @@
+---
+- become: false
+  collections:
+    - kubernetes.core
+  hosts: localhost
+  tasks:
+    - name: Create Namespace
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "keepup-test"
+            labels:
+              name: keepup
+    - name: Create database secret
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          data:
+            db.user.name: S0VFUFVQX0NMT1VEX0RC
+            db.user.password: MTIzNDU2Nzg5MA==
+          kind: Secret
+          metadata:
+            name: db-security
+            namespace: keepup-test
+          type: Opaque
+    - name: Create database config
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          data:
+            postgres.db.name: KEEPUP_CLOUD_DB
+            postgres.service.name: KEEPUP_CLOUD_DB
+          kind: ConfigMap
+          metadata:
+            name: postgres-config
+            namespace: keepup-test
+    - name: Create database volume
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          kind: PersistentVolume
+          apiVersion: v1
+          metadata:
+            name: postgres-pv-volume
+            namespace: keepup-test
+            labels:
+              type: local
+              app: postgres
+          spec:
+            storageClassName: manual
+            capacity:
+              storage: 5Gi
+            accessModes:
+              - ReadWriteMany
+            hostPath:
+              path: "/mnt/data"
+    - name: Create database persistent volume claim
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          kind: PersistentVolumeClaim
+          apiVersion: v1
+          metadata:
+            name: postgres-pv-claim
+            namespace: keepup-test
+            labels:
+              app: postgres
+          spec:
+            storageClassName: manual
+            accessModes:
+              - ReadWriteMany
+            resources:
+              requests:
+                storage: 5Gi
+    - name: Create database deployment
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: postgresql
+            namespace: keepup-test
+          spec:
+            selector:
+              matchLabels:
+                app: postgresql
+            replicas: 1
+            template:
+              metadata:
+                namespace: keepup-test
+                labels:
+                  app: postgresql
+              spec:
+                containers:
+                  - name: postgres
+                    image: docker:5000/db/postgres:1.0
+                    resources:
+                      limits:
+                        cpu: '1'
+                        memory: '1Gi'
+                      requests:
+                        cpu: '1'
+                        memory: '1Gi'
+                    env:
+                      - name: POSTGRES_USER
+                        valueFrom:
+                          secretKeyRef:
+                            name: db-security
+                            key: db.user.name
+                      - name: POSTGRES_PASSWORD
+                        valueFrom:
+                          secretKeyRef:
+                            name: db-security
+                            key: db.user.password
+                      - name: POSTGRES_DB
+                        valueFrom:
+                          configMapKeyRef:
+                            name: postgres-config
+                            key: postgres.service.name
+                    ports:
+                      - containerPort: 5432
+                    volumeMounts:
+                      - name: postgres-initdb
+                        mountPath: /home/user/cluster/keepup-cloud/postgres-vm
+                volumes:
+                  - name: postgres-initdb
+                    configMap:
+                      name: postgres-initdb-config
+                imagePullSecrets:
+                - name: regcred
+    - name: Create database initdb-config
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: postgres-initdb-config
+            namespace: keepup-test
+          data:
+            initdb.sql: |
+              CREATE USER KEEPUP_CLOUD_DB WITH PASSWORD '1234567890';
+              CREATE DATABASE KEEPUP_CLOUD_DB;
+              REVOKE CONNECT ON DATABASE KEEPUP_CLOUD_DB FROM PUBLIC;
+              GRANT CONNECT ON DATABASE KEEPUP_CLOUD_DB TO KEEPUP_CLOUD_DB;
+    - name: Create database service
+      k8s:
+        kubeconfig: ~/kubeconfig
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: postgresql
+            namespace: keepup-test
+          spec:
+            type: NodePort
+            selector:
+              app: postgresql
+            ports:
+              - port: 5432
+                targetPort: 5432
+                nodePort: 31332

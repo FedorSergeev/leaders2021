@@ -1,0 +1,2 @@
+[masters]
+microk8s-node-0  ansible_host=microk8s-node-0
