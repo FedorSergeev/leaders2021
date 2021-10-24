@@ -33,11 +33,19 @@ class SocialRecommend:
             cell = self.fishnet_base_geo[self.fishnet_base_geo['cell_zid'] == r.nearest_cell_zid].index[0]
             self.maters_cells.append(cell)
 
-    def get_normalization_data(self) -> Tuple[Any, Any]:
+    def recount_data(self,new_cell_value) -> Tuple[Any, Any]:
+        fishnet = self.fishnet_base.copy().drop(['nearest_mater', 'nearest_hosp'], axis=1)
+        for cell_id in new_cell_value:
+            fishnet = fishnet.iloc[int(cell_id)].apply(lambda x: x * int(new_cell_value[cell_id]))
+        fishnet['nearest_mater'] = self.fishnet_base['nearest_mater']
+        fishnet['nearest_hosp'] = self.fishnet_base['nearest_hosp']
+        return fishnet
+
+    def get_normalization_data(self, fishnet) -> Tuple[Any, Any]:
         # Нормализует данные, кроме категориальных.
         # Возвращает 2 нормализованных DataFrame объекта. Информация по всем зонам и по роддомам
         # Нормализация происходит объектом StandartScaler из пакета sklearn, модуля preprocessing
-        fishnet = self.fishnet_base.drop(['nearest_mater', 'nearest_hosp'], axis=1)
+        fishnet = fishnet.drop(['nearest_mater', 'nearest_hosp'], axis=1)
         maters = self.maters_base.drop(['nearest_mater', 'nearest_hosp'], axis=1)
         # create a scaler object
         std_scaler = StandardScaler()
@@ -50,11 +58,6 @@ class SocialRecommend:
         fishnet_std['nearest_hosp'] = self.fishnet_base.nearest_mater.apply(lambda x: self.nearest_hosp(x))
         return fishnet_std, maters_std
 
-    def migration_calc(self):
-        # Перерасчитывает данные self.maters_base и self.fishnet_base с учётом миграции.
-        # Нормализовать только после пересчёта миграции.
-        raise NotImplementedError
-
     def calculate_dist(self, cell_data, maters) -> Optional[int]:
         min_dist = None
         for _, row in maters.iterrows():
@@ -65,13 +68,15 @@ class SocialRecommend:
                 min_dist = dist
         return min_dist
 
-    def predict(self, migration) -> str:
+    def predict(self, migration, new_cell_data = {}) -> str:
         # Просчитывает метрику по всем ячейкам из fishnet по maters (родильные дома)
         # Возвращаем файл html с построенной картой
         if migration != '0':
-            raise NotImplementedError
+            fishnet = self.recount_data(new_cell_data)
+            fishnet, maters = self.get_normalization_data(fishnet)
+        else:
+            fishnet, maters = self.get_normalization_data(self.fishnet_base)
         predictions = []
-        fishnet, maters = self.get_normalization_data()
         for index, row in fishnet.iterrows():
             row_data = np.array(row.values)
             pred = self.calculate_dist(row_data, maters)
@@ -138,7 +143,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Данную область можно считать неплохой для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button onclick="saveCellData();">Сохранить</button>'
+                            'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 3 * avg_mater_dist:
@@ -149,7 +154,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Слабо рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button class="" type="button" onclick="saveCellData()">Сохранить!</button>'
+                            'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=300).add_to(geo_j)
                 geo_j.add_to(m_f)
             elif item[0] < 4.5 * avg_mater_dist:
@@ -160,7 +165,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button type="button" onclick="saveCellData()">Сохранить!</button>'
+                            'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=280).add_to(geo_j)
                 geo_j.add_to(m_f)
             else:
@@ -171,7 +176,7 @@ class SocialRecommend:
                                                                  'fillOpacity': 0.3})
                 geo_data = 'Крайне не рекомендуем данную область для постройки<br>Номер области: {}'.format(item[1])
                 geo_data += '<br>Коэффициент миграционного прироста<br> <input name="cell_param" type="number" value="1"' \
-                            'min="0" max="100" style="width: 5em"/><button type="button" onclick="saveCellData()">Сохранить!</button>'
+                            'min="0" max="100" style="width: 5em"/>'
                 folium.Popup(geo_data, min_width=250, max_width=320).add_to(geo_j)
                 geo_j.add_to(m_f)
         colormap = cm.LinearColormap(colors=['green','#C8FE2E','orange','red', '#FF5500'],
