@@ -49,6 +49,20 @@ export class RenderedMapComponent {
   }
 
   public getRenderedMap() {
+    let cookies:string[] = document.cookie.split(";")
+    let js_raw = null  
+    for (let index = 0; index < cookies.length; index++) {
+        if (cookies[index].indexOf("app_cookies=") >= 0){
+            let cookie = cookies[index]
+            js_raw = cookie.slice(cookie.indexOf("app_cookies=") + "app_cookies=".length)
+            break
+        }
+    }
+    let cookie_object = {}
+    if (js_raw) {
+        cookie_object = JSON.parse(js_raw)
+    }
+
     const headers = new HttpHeaders({
       responseType: 'text/html',
       'Access-Control-Allow-Origin': '*'
@@ -63,7 +77,7 @@ export class RenderedMapComponent {
     //     console.log(this.htmlData)
     //   })
     this.isGettingMap = true
-    this.http.get<SafeHtml>(this.getPredictionUrl, { headers })
+    this.http.post<SafeHtml>(this.getPredictionUrl, cookie_object, { headers })
       // .pipe(catchError(err=> {err}))
       .subscribe(res => {
         this.isGettingMap = false
