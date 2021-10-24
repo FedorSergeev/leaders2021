@@ -2,6 +2,7 @@ import logging
 import sys
 
 from flask import Flask, jsonify, make_response, request, render_template
+from flask_cors import CORS, cross_origin
 
 from prediction import SocialRecommend
 
@@ -9,21 +10,23 @@ logging.basicConfig(filename='logs/logs.log', level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 social_recommend = SocialRecommend()
 
 
 def launch_task(take_info_migration, api):
     logging.info(f"Launch task with params: take_info_migration='{take_info_migration}' and api='{api}'")
-    pred_recommend = social_recommend.predict(take_info_migration)
     if api == 'v1.0':
-        res_dict = pred_recommend
+        res_dict = social_recommend.predict(take_info_migration)
         return res_dict
     else:
         res_dict = {'error': 'API doesnt exist'}
         return res_dict
 
 
+@cross_origin()
 @app.route('/social/api/v1.0/getpred', methods=['GET'])
 def get_task():
     args = request.args
@@ -33,6 +36,7 @@ def get_task():
     return make_response(jsonify(result), 200)
 
 
+@cross_origin()
 @app.route('/render_map')
 def render_the_map():
     return render_template(r'map.html')
