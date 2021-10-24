@@ -1,0 +1,14 @@
+version: "2.4"
+services:
+  server:
+    container_name: zusemima-server
+    hostname: zusemima-server
+    image: fksergeev/zusemima-server:1.0
+    expose:
+      - "5000"
+  web:
+    container_name: zusemima-web
+    hostname: zusemima-web
+    image: fsergeev/zusemima-web:1.0
+    expose:
+      - "4200"

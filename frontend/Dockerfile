@@ -1,9 +1,16 @@
-#TODO: helpme
+FROM node:12
 
-#nodejs == v12.22.7
-#npm == 6.14.15
+WORKDIR /usr/src/app
 
-#to install requirements: npm i
-#to start locally: npm start
-#to build for debug: npm build
-#to build for prod: npm build:prod
+RUN npm install npm@6.13.6
+RUN rm -rf /usr/local/lib/node_modules/npm
+RUN mv node_modules/npm /usr/local/lib/node_modules/npm
+
+COPY . .
+
+RUN npm install
+RUN pwd && npm build
+
+EXPOSE 4200
+
+ENTRYPOINT npm run start:docker
