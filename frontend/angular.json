@@ -88,6 +88,14 @@
                   "with": "src/environments/environment.prod.ts"
                 }
               ]
+            },
+            "docker": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.docker.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": ""
@@ -100,6 +108,9 @@
           "configurations": {
             "production": {
               "browserTarget": "ngx-admin-demo:build:production"
+            },
+            "docker": {
+              "browserTarget": "ngx-admin-demo:build:docker"
             }
           }
         },

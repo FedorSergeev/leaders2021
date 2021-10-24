@@ -4,6 +4,7 @@ import { Component, SecurityContext } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import * as DOMPurify from 'dompurify';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 
 
@@ -13,8 +14,8 @@ import { catchError } from 'rxjs/operators';
 })
 export class RenderedMapComponent {
   url: any = '';
-  getPredictionUrl: string = "http://localhost:5000/social/api/v1.0/getpred"
-  renderedMapEndpoint: string = "http://localhost:5000/render_map"
+  getPredictionUrl: string = "http://" + environment.backend_host + ":5000/social/api/v1.0/getpred"
+  renderedMapEndpoint: string = "http://" + environment.backend_host + ":5000/render_map"
   htmlData: any = '';
   htmlString: any = '';
   isGettingMap = false
@@ -50,18 +51,18 @@ export class RenderedMapComponent {
   }
 
   public getRenderedMap() {
-    let cookies:string[] = document.cookie.split(";")
-    let js_raw = null  
+    let cookies: string[] = document.cookie.split(";")
+    let js_raw = null
     for (let index = 0; index < cookies.length; index++) {
-        if (cookies[index].indexOf("app_cookies=") >= 0){
-            let cookie = cookies[index]
-            js_raw = cookie.slice(cookie.indexOf("app_cookies=") + "app_cookies=".length)
-            break
-        }
+      if (cookies[index].indexOf("app_cookies=") >= 0) {
+        let cookie = cookies[index]
+        js_raw = cookie.slice(cookie.indexOf("app_cookies=") + "app_cookies=".length)
+        break
+      }
     }
     let cookie_object = {}
     if (js_raw) {
-        cookie_object = JSON.parse(js_raw)
+      cookie_object = JSON.parse(js_raw)
     }
 
     const headers = new HttpHeaders({
@@ -69,14 +70,6 @@ export class RenderedMapComponent {
       'Access-Control-Allow-Origin': '*'
     });
 
-    // this.http.get<string>(this.renderedMapEndpoint, { headers })
-    //   .subscribe(res => {
-    //     // console.log(res)
-    //     this.htmlString = res;
-    //     // this.sanitizer.sanitize(SecurityContext.URL, url)
-    //     this.htmlData = this.sanitizer.bypassSecurityTrustHtml(this.htmlString); // this line bypasses angular security
-    //     console.log(this.htmlData)
-    //   })
     this.isGettingMap = true
     this.http.post<SafeHtml>(this.getPredictionUrl, cookie_object, { headers })
       // .pipe(catchError(err=> {err}))
